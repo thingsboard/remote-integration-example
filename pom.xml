@@ -47,7 +47,7 @@
         <docker.repo>thingsboard</docker.repo>
         <docker.name>tb-remote-integration-example</docker.name>
         <dockerfile.skip>false</dockerfile.skip>
-        <thingsboard.version>2.4.1PE-SNAPSHOT</thingsboard.version>
+        <thingsboard.version>2.4.1PE</thingsboard.version>
     </properties>
 
     <dependencies>

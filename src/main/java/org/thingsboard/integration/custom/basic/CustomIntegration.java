@@ -29,8 +29,6 @@ import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.thingsboard.integration.api.AbstractIntegration;
 import org.thingsboard.integration.api.TbIntegrationInitParams;
 import org.thingsboard.integration.api.data.UplinkData;
@@ -47,6 +45,7 @@ import java.util.Map;
 public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg> {
 
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static final int bindPort = 5555;
     private static final long msgGenerationIntervalMs = 5000;
 
     private NioEventLoopGroup bossGroup;
@@ -60,15 +59,6 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
     public void init(TbIntegrationInitParams params) throws Exception {
         super.init(params);
         JsonNode configuration = mapper.readTree(params.getConfiguration().getConfiguration().get("configuration").asText());
-
-        int port;
-        if (configuration.has("port")) {
-            port = configuration.get("port").asInt();
-        } else {
-            log.error("Failed to find port field in integration config!");
-            throw new RuntimeException();
-        }
-
         try {
             bossGroup = new NioEventLoopGroup();
             workGroup = new NioEventLoopGroup();
@@ -100,6 +90,7 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
                     });
                 }
             });
+            int port = getBindPort(configuration);
             serverChannel = bootstrap.bind(port).sync().channel();
             client = new CustomClient(port, getMsgGeneratorIntervalMs(configuration));
         } catch (Exception e) {
@@ -129,29 +120,21 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
     public void process(CustomIntegrationMsg customIntegrationMsg) {
         CustomResponse response = customIntegrationMsg.getResponse();
         if (!this.configuration.isEnabled()) {
-            response.setResult(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Integration is disabled").toString());
+            response.setResult("Integration is disabled");
             return;
         }
         String status = "OK";
         Exception exception = null;
         try {
-            ResponseEntity httpResponse = doProcess(customIntegrationMsg.getMsg());
-            if (!httpResponse.getStatusCode().is2xxSuccessful()) {
-                status = httpResponse.getStatusCode().name();
-            }
-            try {
-                response.setResult(httpResponse.toString());
-            } catch (Exception e) {
-                log.error("Failed to send response from integration to original request!", e);
-            }
+            response.setResult(doProcess(customIntegrationMsg.getMsg()));
             integrationStatistics.incMessagesProcessed();
         } catch (Exception e) {
             log.debug("Failed to apply data converter function: {}", e.getMessage(), e);
             exception = e;
             status = "ERROR";
-            response.setResult(new ResponseEntity<>(e, HttpStatus.INTERNAL_SERVER_ERROR).toString());
+            response.setResult(status);
         }
-        if (!status.equals("OK")) {
+        if (status.equals("ERROR")) {
             integrationStatistics.incErrorsOccurred();
         }
         if (configuration.isDebugMode()) {
@@ -163,7 +146,7 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
         }
     }
 
-    private ResponseEntity doProcess(String msg) throws Exception {
+    private String doProcess(String msg) throws Exception {
         byte[] data = mapper.writeValueAsBytes(msg);
         Map<String, String> metadataMap = new HashMap<>(metadataTemplate.getKvMap());
         List<UplinkData> uplinkDataList = convertToUplinkDataList(context, data, new UplinkMetaData(getUplinkContentType(), metadataMap));
@@ -178,9 +161,20 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
                         .build();
                 processUplinkData(context, uplinkDataResult);
             }
-            return new ResponseEntity<>(HttpStatus.OK);
+            return "OK";
         }
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return "No Content";
+    }
+
+    private int getBindPort(JsonNode configuration) {
+        int port;
+        if (configuration.has("port")) {
+            port = configuration.get("port").asInt();
+        } else {
+            log.warn("Failed to find [port] field in integration config, default value [{}] is used!", bindPort);
+            port = bindPort;
+        }
+        return port;
     }
 
     private long getMsgGeneratorIntervalMs(JsonNode configuration) {

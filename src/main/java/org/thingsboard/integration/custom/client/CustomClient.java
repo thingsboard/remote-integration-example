@@ -53,7 +53,7 @@ public class CustomClient {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(this.workGroup);
             bootstrap.channel(NioSocketChannel.class);
-            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000); // not working...
+            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000);
             bootstrap.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel socketChannel) {
