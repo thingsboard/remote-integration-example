@@ -21,16 +21,16 @@ server:
   port: "${HTTP_BIND_PORT:8082}"
 
 integration:
-  routingKey: "${INTEGRATION_ROUTING_KEY:77f4e2779a01fd7406d764f0b141fe17}"
-  secret: "${INTEGRATION_SECRET:jz0b59miq5of1chjcdaf}"
+  routingKey: "${INTEGRATION_ROUTING_KEY:PUT_YOUR_ROUTING_KEY_HERE}"
+  secret: "${INTEGRATION_SECRET:PUT_YOUR_SECRET_HERE}"
   allow_local_network_hosts: "${INTEGRATION_ALLOW_LOCAL_NETWORK_HOSTS:true}"
   statistics:
     # Enable/disable integration statistics
-    enabled: "${INTEGRATION_STATISTICS_ENABLED:false}"
+    enabled: "${INTEGRATION_STATISTICS_ENABLED:true}"
     persist_frequency: "${INTEGRATION_STATISTICS_PERSIST_FREQUENCY:3600000}"
 
 storage:
-  data_folder_path: "${INTEGRATION_STORAGE_DATA_FOLDER_PATH:.}"
+  data_folder_path: "${INTEGRATION_STORAGE_DATA_FOLDER_PATH:./}"
   max_file_count: "${INTEGRATION_STORAGE_MAX_FILE_COUNT:100}"
   max_records_per_file: "${INTEGRATION_STORAGE_MAX_RECORDS_PER_FILE:30}"
   max_records_between_fsync: "${INTEGRATION_STORAGE_MAX_RECORDS_BETWEEN_FSYNC:10}"
@@ -42,8 +42,8 @@ executors:
   reconnect_timeout: "${EXECUTORS_RECONNECT_TIMEOUT:3000}" # in milliseconds
 
 rpc:
-  host: "${PRC_HOST:localhost}"
-  port: "${RPC_PORT:50051}"
+  host: "${PRC_HOST:cloud.thingsboard.io}"
+  port: "${RPC_PORT:9090}"
   timeout: "${RPC_TIMEOUT:5}" # Timeout in seconds for channel termination
   client_id: "${RPC_CLIENT_ID:remote}"
   ssl:
