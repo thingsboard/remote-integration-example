@@ -16,7 +16,7 @@
 package org.thingsboard.integration.custom.client;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -42,18 +42,18 @@ public class CustomClient {
     private final Random random;
     private final long msgGenerationIntervalMs;
 
-    private ChannelFuture channelFuture;
+    private Channel clientChannel;
 
-    public CustomClient(long msgGenerationIntervalMs) {
-        this.msgGenerationIntervalMs = msgGenerationIntervalMs;
+    public CustomClient(int port, long msgGenerationIntervalMs) {
         this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         this.workGroup = new NioEventLoopGroup();
         this.random = new Random();
+        this.msgGenerationIntervalMs = msgGenerationIntervalMs;
         try {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(this.workGroup);
             bootstrap.channel(NioSocketChannel.class);
-            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000); // not working...
+            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000); // not working...
             bootstrap.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel socketChannel) {
@@ -61,30 +61,30 @@ public class CustomClient {
                     socketChannel.pipeline().addLast(new SimpleChannelInboundHandler<String>() {
                         @Override
                         protected void channelRead0(ChannelHandlerContext ctx, String msg) {
-                            log.info("Client received the message: {}", msg);
+                            log.debug("Client received the message: {}", msg);
                             if (msg.equals("Hello from ThingsBoard!")) {
-                                log.info("Starting generator...");
+                                log.debug("Starting generator...");
                                 startGenerator();
                             }
                         }
                     });
                 }
             });
-            channelFuture = bootstrap.connect("localhost", 5555).sync();
-            channelFuture.channel().writeAndFlush("Hello to ThingsBoard! My name is [Device B]");
-            channelFuture.channel().closeFuture().sync();
+            clientChannel = bootstrap.connect("localhost", port).sync().channel();
+            clientChannel.writeAndFlush("Hello to ThingsBoard! My name is [Device B]");
         } catch (Exception e) {
             log.error("Failed to init TCP client!", e);
+            throw new RuntimeException();
         }
     }
 
     private void startGenerator() {
         this.scheduledExecutorService.scheduleAtFixedRate(() ->
-                channelFuture.channel().writeAndFlush(generateData()), 0, this.msgGenerationIntervalMs, TimeUnit.MILLISECONDS);
+                clientChannel.writeAndFlush(generateData()), 0, this.msgGenerationIntervalMs, TimeUnit.MILLISECONDS);
     }
 
     private String generateData() {
-        int firstV = generateValue(15, 40);
+        int firstV = generateValue(10, 40);
         int secondV = generateValue(0, 100);
         int thirdV = generateValue(0, 100);
         return firstV + "," + secondV + "," + thirdV;
@@ -101,7 +101,11 @@ public class CustomClient {
         if (this.scheduledExecutorService != null) {
             this.scheduledExecutorService.shutdownNow();
         }
-        if (this.workGroup != null) {
+        try {
+            clientChannel.close().sync();
+        } catch (Exception e) {
+            log.error("Failed to close the channel!", e);
+        } finally {
             this.workGroup.shutdownGracefully();
         }
     }

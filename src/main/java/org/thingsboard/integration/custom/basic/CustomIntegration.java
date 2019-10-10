@@ -42,17 +42,16 @@ import org.thingsboard.integration.custom.message.CustomResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Slf4j
 public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg> {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final long msgGenerationIntervalMs = 5000;
 
-    private ExecutorService service;
-    private NioEventLoopGroup workGroup;
     private NioEventLoopGroup bossGroup;
+    private NioEventLoopGroup workGroup;
+    private Channel serverChannel;
     private CustomClient client;
     private String deviceName;
     private boolean initialized;
@@ -60,61 +59,52 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
     @Override
     public void init(TbIntegrationInitParams params) throws Exception {
         super.init(params);
-
-        service = Executors.newFixedThreadPool(2);
-        workGroup = new NioEventLoopGroup();
-        bossGroup = new NioEventLoopGroup();
-
         JsonNode configuration = mapper.readTree(params.getConfiguration().getConfiguration().get("configuration").asText());
 
-        service.submit(() -> {
-            int port;
-            if (configuration.has("port")) {
-                port = configuration.get("port").asInt();
-            } else {
-                log.warn("Failed to find port field in integration config!");
-                throw new RuntimeException();
-            }
-            try {
-                ServerBootstrap bootstrap = new ServerBootstrap();
-                bootstrap.group(bossGroup, workGroup);
-                bootstrap.channel(NioServerSocketChannel.class);
-                bootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel socketChannel) {
-                        socketChannel.pipeline().addLast(new StringEncoder(), new StringDecoder(), new LineBasedFrameDecoder(1024));
-                        socketChannel.pipeline().addLast(new SimpleChannelInboundHandler<String>() {
-                            @Override
-                            protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
-                                log.info("Server received the message: {}", msg);
-                                if (msg.startsWith("Hello to ThingsBoard!")) {
-                                    deviceName = msg.substring(msg.indexOf("[") + 1, msg.indexOf("]"));
-                                    ctx.writeAndFlush("Hello from ThingsBoard!");
-                                    initialized = true;
+        int port;
+        if (configuration.has("port")) {
+            port = configuration.get("port").asInt();
+        } else {
+            log.error("Failed to find port field in integration config!");
+            throw new RuntimeException();
+        }
+
+        try {
+            bossGroup = new NioEventLoopGroup();
+            workGroup = new NioEventLoopGroup();
+            ServerBootstrap bootstrap = new ServerBootstrap();
+            bootstrap.group(bossGroup, workGroup);
+            bootstrap.channel(NioServerSocketChannel.class);
+            bootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel socketChannel) {
+                    socketChannel.pipeline().addLast(new StringEncoder(), new StringDecoder(), new LineBasedFrameDecoder(1024));
+                    socketChannel.pipeline().addLast(new SimpleChannelInboundHandler<String>() {
+                        @Override
+                        protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
+                            log.debug("Server received the message: {}", msg);
+                            if (msg.startsWith("Hello to ThingsBoard!")) {
+                                deviceName = msg.substring(msg.indexOf("[") + 1, msg.indexOf("]"));
+                                ctx.writeAndFlush("Hello from ThingsBoard!");
+                                initialized = true;
+                            } else {
+                                if (initialized) {
+                                    CustomResponse response = new CustomResponse();
+                                    process(new CustomIntegrationMsg(msg, response));
+                                    ctx.writeAndFlush(response.getResult());
                                 } else {
-                                    if (initialized) {
-                                        CustomResponse response = new CustomResponse();
-                                        process(new CustomIntegrationMsg(msg, response));
-                                        ctx.writeAndFlush(response.getResult());
-                                    }
+                                    log.warn("The flaw was not started correctly!");
                                 }
                             }
-                        });
-                    }
-                });
-                Channel channel = bootstrap.bind(port).syncUninterruptibly().channel();
-                channel.closeFuture().await();
-            } catch (Exception e) {
-                log.error("Failed to init TCP server!", e);
-            }
-        });
-
-        long msgGenerationIntervalMs;
-        if (configuration.has("msgGenerationIntervalMs")) {
-            msgGenerationIntervalMs = configuration.get("msgGenerationIntervalMs").asLong();
-            service.submit(() -> {
-                client = new CustomClient(msgGenerationIntervalMs);
+                        }
+                    });
+                }
             });
+            serverChannel = bootstrap.bind(port).sync().channel();
+            client = new CustomClient(port, getMsgGeneratorIntervalMs(configuration));
+        } catch (Exception e) {
+            log.error("Failed to init TCP server!", e);
+            throw new RuntimeException();
         }
     }
 
@@ -125,13 +115,12 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
     @Override
     public void destroy() {
         client.destroy();
-        if (service != null) {
-            service.shutdownNow();
-        }
-        if (bossGroup != null) {
+        try {
+            serverChannel.close().sync();
+        } catch (Exception e) {
+            log.error("Failed to close the channel!", e);
+        } finally {
             bossGroup.shutdownGracefully();
-        }
-        if (workGroup != null) {
             workGroup.shutdownGracefully();
         }
     }
@@ -169,7 +158,7 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
             try {
                 persistDebug(context, "Uplink", getUplinkContentType(), customIntegrationMsg.getMsg(), status, exception);
             } catch (Exception e) {
-                log.warn("Failed to persist debug message", e);
+                log.warn("Failed to persist debug message!", e);
             }
         }
     }
@@ -189,8 +178,20 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
                         .build();
                 processUplinkData(context, uplinkDataResult);
             }
+            return new ResponseEntity<>(HttpStatus.OK);
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    private long getMsgGeneratorIntervalMs(JsonNode configuration) {
+        long msgIntervalMs;
+        if (configuration.has("msgGenerationIntervalMs")) {
+            msgIntervalMs = configuration.get("msgGenerationIntervalMs").asLong();
+        } else {
+            log.warn("Failed to find [msgGenerationIntervalMs] field in integration config, default value [{}] is used!", msgGenerationIntervalMs);
+            msgIntervalMs = msgGenerationIntervalMs;
+        }
+        return msgIntervalMs;
     }
 
 }
