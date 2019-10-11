@@ -38,7 +38,6 @@
         <grpc.version>1.22.1</grpc.version>
         <winsw.version>2.0.1</winsw.version>
         <netty.version>4.1.37.Final</netty.version>
-        <httpclient.version>3.1</httpclient.version>
         <pkg.name>tb-remote-integration-example</pkg.name>
         <pkg.user>thingsboard</pkg.user>
         <pkg.unixLogFolder>/var/log/${pkg.name}</pkg.unixLogFolder>
@@ -57,18 +56,8 @@
             <version>${thingsboard.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.thingsboard.common.integration</groupId>
-            <artifactId>http-integrations</artifactId>
-            <version>${thingsboard.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context-support</artifactId>
             <version>${spring.version}</version>
         </dependency>
         <dependency>
@@ -86,34 +75,14 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
-            <version>${httpclient.version}</version>
-        </dependency>
-        <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-handler</artifactId>
             <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty</artifactId>
             <version>${grpc.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>netty-transport</artifactId>
-                    <groupId>io.netty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>netty-common</artifactId>
-                    <groupId>io.netty</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
     </dependencies>
 
