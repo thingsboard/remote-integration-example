@@ -29,15 +29,11 @@
     <inceptionYear>2016</inceptionYear>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <lombok.version>1.16.18</lombok.version>
-        <spring-boot.version>2.1.3.RELEASE</spring-boot.version>
-        <spring.version>5.1.5.RELEASE</spring.version>
+        <spring-boot.version>2.2.6.RELEASE</spring-boot.version>
         <grpc.version>1.22.1</grpc.version>
         <winsw.version>2.0.1</winsw.version>
-        <netty.version>4.1.37.Final</netty.version>
         <pkg.name>tb-remote-integration-example</pkg.name>
         <pkg.user>thingsboard</pkg.user>
         <pkg.unixLogFolder>/var/log/${pkg.name}</pkg.unixLogFolder>
@@ -46,19 +42,19 @@
         <docker.repo>thingsboard</docker.repo>
         <docker.name>tb-remote-integration-example</docker.name>
         <dockerfile.skip>false</dockerfile.skip>
-        <thingsboard.version>2.4.3PE</thingsboard.version>
+        <thingsboard.version>3.1.0PE</thingsboard.version>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>org.thingsboard.common.integration</groupId>
-            <artifactId>remote-integration-api</artifactId>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>proto</artifactId>
             <version>${thingsboard.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
+            <groupId>org.thingsboard.common.integration</groupId>
+            <artifactId>remote-integration-api</artifactId>
+            <version>${thingsboard.version}</version>
         </dependency>
         <dependency>
             <groupId>com.sun.winsw</groupId>
@@ -73,11 +69,6 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
