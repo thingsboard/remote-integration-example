@@ -1,3 +1,5 @@
-#!/bin/sh
+set -e
 
-update-rc.d -f ${pkg.name} remove
+systemctl --no-reload disable --now ${pkg.name}.service > /dev/null 2>&1 || :
+
+exit 0
