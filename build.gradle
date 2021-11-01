@@ -57,7 +57,7 @@ ospackage {
     }
 
     // Copy the config files
-    from("${buildDir}/conf") {
+    from("target/conf") {
         exclude "${pkgName}.conf"
         fileType CONFIG | NOREPLACE
         fileMode 0754
@@ -71,12 +71,13 @@ buildRpm {
 
     arch = NOARCH
 
-    archiveVersion = projectVersion.replace('-', '')
-    archiveFileName = "${pkgName}.rpm"
+    version = projectVersion.replace('-', '')
+    archiveName = "${pkgName}.rpm"
 
-    requires("java-1.8.0")
+    requires("java-11")
+    requires("newt")
 
-    from("${buildDir}/conf") {
+    from("target/conf") {
         include "${pkgName}.conf"
         filter(ReplaceTokens, tokens: ['pkg.platform': 'rpm'])
         fileType CONFIG | NOREPLACE
@@ -93,15 +94,13 @@ buildRpm {
     permissionGroup pkgUser
 
     // Copy the system unit files
-    from("${buildDir}/control/template.service") {
+    from("${buildDir}/control/${pkgName}.service") {
         addParentDirs = false
         fileMode 0644
         into "/usr/lib/systemd/system"
-        rename { String filename ->
-            "${pkgName}.service"
-        }
     }
 
+    directory(pkgLogFolder, 0755)
     link("${pkgInstallFolder}/bin/${pkgName}.yml", "${pkgInstallFolder}/conf/${pkgName}.yml")
     link("/etc/${pkgName}/conf", "${pkgInstallFolder}/conf")
 }
@@ -111,11 +110,13 @@ buildDeb {
 
     arch = "all"
 
-    archiveFileName = "${pkgName}.deb"
+    archiveName = "${pkgName}.deb"
 
-    requires("openjdk-8-jre").or("java8-runtime").or("oracle-java8-installer").or("openjdk-8-jre-headless")
+    preDepends("debconf", "0.5", GREATER | EQUAL).or("debconf-2.0")
 
-    from("${buildDir}/conf") {
+    requires("openjdk-11-jre").or("java11-runtime").or("oracle-java11-installer").or("openjdk-11-jre-headless")
+
+    from("target/conf") {
         include "${pkgName}.conf"
         filter(ReplaceTokens, tokens: ['pkg.platform': 'deb'])
         fileType CONFIG | NOREPLACE
@@ -135,16 +136,8 @@ buildDeb {
     user pkgUser
     permissionGroup pkgUser
 
-    // Copy the system unit files
-    from("${buildDir}/control/template.service") {
-        addParentDirs = false
-        fileMode 0644
-        into "/lib/systemd/system"
-        rename { String filename ->
-            "${pkgName}.service"
-        }
-    }
-
+    directory(pkgLogFolder, 0755)
+    link("/etc/init.d/${pkgName}", "${pkgInstallFolder}/bin/${pkgName}.jar")
     link("${pkgInstallFolder}/bin/${pkgName}.yml", "${pkgInstallFolder}/conf/${pkgName}.yml")
     link("/etc/${pkgName}/conf", "${pkgInstallFolder}/conf")
 }
