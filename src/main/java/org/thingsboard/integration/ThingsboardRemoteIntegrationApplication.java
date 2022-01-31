@@ -18,13 +18,22 @@ package org.thingsboard.integration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.thingsboard.server.coapserver.CoapServerContext;
+import org.thingsboard.server.coapserver.CoapServerService;
 
 import java.util.Arrays;
 
 @SpringBootApplication
 @EnableAsync
-@ComponentScan({"org.thingsboard"})
+@ComponentScan(
+        basePackages = {"org.thingsboard"},
+        excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = CoapServerContext.class),
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = CoapServerService.class)
+        }
+)
 public class ThingsboardRemoteIntegrationApplication {
 
     private static final String SPRING_CONFIG_NAME_KEY = "--spring.config.name";
