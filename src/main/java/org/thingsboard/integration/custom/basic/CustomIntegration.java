@@ -31,6 +31,7 @@ import io.netty.handler.codec.string.StringEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.integration.api.AbstractIntegration;
 import org.thingsboard.integration.api.TbIntegrationInitParams;
+import org.thingsboard.integration.api.data.UplinkContentType;
 import org.thingsboard.integration.api.data.UplinkData;
 import org.thingsboard.integration.api.data.UplinkMetaData;
 import org.thingsboard.integration.custom.client.CustomClient;
@@ -99,8 +100,8 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
         }
     }
 
-    protected String getUplinkContentType() {
-        return "TEXT";
+    protected UplinkContentType getUplinkContentType() {
+        return UplinkContentType.TEXT;
     }
 
     @Override
