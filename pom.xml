@@ -33,7 +33,7 @@
         <spring-boot.version>2.3.12.RELEASE</spring-boot.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <thingsboard.version>3.3.4.1PE</thingsboard.version>
+        <thingsboard.version>3.4.0PE-SNAPSHOT</thingsboard.version>
         <lombok.version>1.18.18</lombok.version>
         <grpc.version>1.42.1</grpc.version>
         <pkg.name>tb-remote-integration-example</pkg.name>
@@ -57,16 +57,6 @@
             <groupId>org.thingsboard.common.integration</groupId>
             <artifactId>remote-integration-api</artifactId>
             <version>${thingsboard.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.thingsboard.common.transport</groupId>
-                    <artifactId>transport-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.thingsboard.common</groupId>
-                    <artifactId>queue</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

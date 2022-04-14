@@ -27,13 +27,7 @@ import java.util.Arrays;
 
 @SpringBootApplication
 @EnableAsync
-@ComponentScan(
-        basePackages = {"org.thingsboard"},
-        excludeFilters = {
-                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = CoapServerContext.class),
-                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = CoapServerService.class)
-        }
-)
+@ComponentScan("org.thingsboard")
 public class ThingsboardRemoteIntegrationApplication {
 
     private static final String SPRING_CONFIG_NAME_KEY = "--spring.config.name";

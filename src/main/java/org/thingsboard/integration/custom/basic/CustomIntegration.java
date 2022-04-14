@@ -31,16 +31,22 @@ import io.netty.handler.codec.string.StringEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.integration.api.AbstractIntegration;
 import org.thingsboard.integration.api.TbIntegrationInitParams;
+import org.thingsboard.integration.api.data.DownlinkData;
+import org.thingsboard.integration.api.data.IntegrationDownlinkMsg;
+import org.thingsboard.integration.api.data.IntegrationMetaData;
 import org.thingsboard.integration.api.data.UplinkContentType;
 import org.thingsboard.integration.api.data.UplinkData;
 import org.thingsboard.integration.api.data.UplinkMetaData;
 import org.thingsboard.integration.custom.client.CustomClient;
 import org.thingsboard.integration.custom.message.CustomIntegrationMsg;
 import org.thingsboard.integration.custom.message.CustomResponse;
+import org.thingsboard.server.common.msg.TbMsg;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg> {
@@ -97,6 +103,22 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
         } catch (Exception e) {
             log.error("Failed to init TCP server!", e);
             throw new RuntimeException();
+        }
+    }
+
+    @Override
+    public void onDownlinkMsg(IntegrationDownlinkMsg downlink) {
+        TbMsg msg = downlink.getTbMsg();
+        logDownlink(context, "Downlink: " + msg.getType(), msg);
+        if (downlinkConverter != null) {
+            log.info("Received downlink message: {}", msg);
+            try {
+                List<DownlinkData> result = downlinkConverter.convertDownLink(context.getDownlinkConverterContext(),
+                        Collections.singletonList(msg), new IntegrationMetaData(Collections.emptyMap()));
+                log.info("Converted downlink message to: {}", result);
+            } catch (Exception e) {
+                log.warn("Failed to convert downlink message due to: ", e);
+            }
         }
     }
 

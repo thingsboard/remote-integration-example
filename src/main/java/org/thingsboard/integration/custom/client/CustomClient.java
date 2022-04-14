@@ -79,8 +79,8 @@ public class CustomClient {
     }
 
     private void startGenerator() {
-        this.scheduledExecutorService.scheduleAtFixedRate(() ->
-                clientChannel.writeAndFlush(generateData()), 0, this.msgGenerationIntervalMs, TimeUnit.MILLISECONDS);
+//        this.scheduledExecutorService.scheduleAtFixedRate(() ->
+//                clientChannel.writeAndFlush(generateData()), 0, this.msgGenerationIntervalMs, TimeUnit.MILLISECONDS);
     }
 
     private String generateData() {
