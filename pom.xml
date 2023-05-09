@@ -30,13 +30,13 @@
     <inceptionYear>2016</inceptionYear>
 
     <properties>
-        <spring-boot.version>2.7.0</spring-boot.version>
+        <spring-boot.version>2.7.10</spring-boot.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <thingsboard.version>3.4.4PE</thingsboard.version>
+        <thingsboard.version>3.5.0PE</thingsboard.version>
         <lombok.version>1.18.18</lombok.version>
         <grpc.version>1.42.1</grpc.version>
-        <surefire.version>3.0.0-M6</surefire.version>
+        <surefire.version>3.0.0-M9</surefire.version>
         <pkg.name>tb-remote-integration-example</pkg.name>
         <pkg.user>thingsboard</pkg.user>
         <pkg.installFolder>/usr/share/${pkg.name}</pkg.installFolder>
@@ -130,7 +130,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>2.7</version>
+                    <version>3.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
