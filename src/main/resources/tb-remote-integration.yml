@@ -51,47 +51,29 @@ rpc:
     cert: "${RPC_SSL_CERT:roots.pem}"
 
 tbel:
-  # Enable/Disable TBEL feature.
   enabled: "${TBEL_ENABLED:true}"
-  # Limit on the number of arguments that are passed to the function to execute the script
   max_total_args_size: "${TBEL_MAX_TOTAL_ARGS_SIZE:100000}"
-  # Maximum allowed symbols in a result after processing a script
   max_result_size: "${TBEL_MAX_RESULT_SIZE:300000}"
-  # Maximum allowed symbols in script body
   max_script_body_size: "${TBEL_MAX_SCRIPT_BODY_SIZE:50000}"
-  # Maximum allowed TBEL script execution memory
   max_memory_limit_mb: "${TBEL_MAX_MEMORY_LIMIT_MB: 8}"
-  # Maximum allowed TBEL script execution errors before it will be blacklisted
   max_errors: "${TBEL_MAX_ERRORS:3}"
-  # TBEL Eval max request timeout in milliseconds. 0 - no timeout
   max_requests_timeout: "${TBEL_MAX_REQUEST_TIMEOUT:500}"
-  # Maximum time in seconds for black listed function to stay in the list.
   max_black_list_duration_sec: "${TBEL_MAX_BLACKLIST_DURATION_SEC:60}"
-  # Specify thread pool size for javascript executor service
   thread_pool_size: "${TBEL_THREAD_POOL_SIZE:50}"
   stats:
-    # Enable/Disable stats collection for TBEL engine
     enabled: "${TB_TBEL_STATS_ENABLED:false}"
-    # Interval of logging for TBEL stats
     print_interval_ms: "${TB_TBEL_STATS_PRINT_INTERVAL_MS:10000}"
 
 js:
   evaluator: "${JS_EVALUATOR:local}"
-  # Limit on the number of arguments that are passed to the function to execute the script
   max_total_args_size: "${JS_MAX_TOTAL_ARGS_SIZE:150000}"
-  # Maximum allowed symbols in a result after processing a script
   max_result_size: "${JS_MAX_RESULT_SIZE:300000}"
-  # Maximum allowed symbols in script body
   max_script_body_size: "${JS_MAX_SCRIPT_BODY_SIZE:50000}"
   # Built-in JVM JavaScript environment properties
   local:
-    # Use Sandboxed (secured) JVM JavaScript environment
     use_js_sandbox: "${USE_LOCAL_JS_SANDBOX:true}"
-    # Specify thread pool size for JavaScript sandbox resource monitor
     monitor_thread_pool_size: "${LOCAL_JS_SANDBOX_MONITOR_THREAD_POOL_SIZE:4}"
-    # Maximum CPU time in milliseconds allowed for script execution
     max_cpu_time: "${LOCAL_JS_SANDBOX_MAX_CPU_TIME:100}"
-    # Maximum allowed JavaScript execution errors before JavaScript will be blacklisted
     max_errors: "${LOCAL_JS_SANDBOX_MAX_ERRORS:3}"
 
 service:
