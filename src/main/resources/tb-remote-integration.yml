@@ -79,6 +79,12 @@ tbel:
 
 js:
   evaluator: "${JS_EVALUATOR:local}"
+  # Limit on the number of arguments that are passed to the function to execute the script
+  max_total_args_size: "${JS_MAX_TOTAL_ARGS_SIZE:150000}"
+  # Maximum allowed symbols in a result after processing a script
+  max_result_size: "${JS_MAX_RESULT_SIZE:300000}"
+  # Maximum allowed symbols in script body
+  max_script_body_size: "${JS_MAX_SCRIPT_BODY_SIZE:50000}"
   # Built-in JVM JavaScript environment properties
   local:
     # Use Sandboxed (secured) JVM JavaScript environment
