@@ -1,5 +1,5 @@
 /**
- * Copyright © 2016-2019 The Thingsboard Authors
+ * Copyright © 2016-2025 The Thingsboard Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import io.netty.handler.codec.string.StringEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.integration.api.AbstractIntegration;
 import org.thingsboard.integration.api.TbIntegrationInitParams;
-import org.thingsboard.integration.api.data.UplinkContentType;
+import org.thingsboard.integration.api.data.ContentType;
 import org.thingsboard.integration.api.data.UplinkData;
 import org.thingsboard.integration.api.data.UplinkMetaData;
 import org.thingsboard.integration.custom.client.CustomClient;
@@ -100,8 +100,8 @@ public class CustomIntegration extends AbstractIntegration<CustomIntegrationMsg>
         }
     }
 
-    protected UplinkContentType getUplinkContentType() {
-        return UplinkContentType.TEXT;
+    protected ContentType getUplinkContentType() {
+        return ContentType.TEXT;
     }
 
     @Override

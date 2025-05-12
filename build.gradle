@@ -1,5 +1,5 @@
 /**
- * Copyright © 2016-2019 The Thingsboard Authors
+ * Copyright © 2016-2025 The Thingsboard Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,9 @@
  */
 import org.apache.tools.ant.filters.ReplaceTokens
 
-buildscript {
-    ext {
-        osPackageVersion = "8.3.0"
-    }
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath("com.netflix.nebula:gradle-ospackage-plugin:${osPackageVersion}")
-    }
+plugins {
+    id "nebula.ospackage" version "8.6.3"
 }
-
-apply plugin: "nebula.ospackage"
 
 buildDir = projectBuildDir
 version = projectVersion
@@ -57,7 +47,7 @@ ospackage {
     }
 
     // Copy the config files
-    from("target/conf") {
+    from("${buildDir}/conf") {
         exclude "${pkgName}.conf"
         fileType CONFIG | NOREPLACE
         fileMode 0754
@@ -71,13 +61,12 @@ buildRpm {
 
     arch = NOARCH
 
-    version = projectVersion.replace('-', '')
-    archiveName = "${pkgName}.rpm"
+    archiveVersion = projectVersion.replace('-', '')
+    archiveFileName = "${pkgName}.rpm"
 
-    requires("java-11")
-    requires("newt")
+    requires("java-17")
 
-    from("target/conf") {
+    from("${buildDir}/conf") {
         include "${pkgName}.conf"
         filter(ReplaceTokens, tokens: ['pkg.platform': 'rpm'])
         fileType CONFIG | NOREPLACE
@@ -94,15 +83,22 @@ buildRpm {
     permissionGroup pkgUser
 
     // Copy the system unit files
-    from("${buildDir}/control/${pkgName}.service") {
+    from("${buildDir}/control/template.service") {
         addParentDirs = false
         fileMode 0644
         into "/usr/lib/systemd/system"
+        rename { String filename ->
+            "${pkgName}.service"
+        }
     }
 
-    directory(pkgLogFolder, 0755)
     link("${pkgInstallFolder}/bin/${pkgName}.yml", "${pkgInstallFolder}/conf/${pkgName}.yml")
     link("/etc/${pkgName}/conf", "${pkgInstallFolder}/conf")
+}
+
+task prepareDeb(type: Copy) {
+    from "${buildDir}/control/deb/config", "${buildDir}/control/deb/templates"
+    into "${buildDir}/debian"
 }
 
 // Same as the buildRpm task
@@ -110,13 +106,13 @@ buildDeb {
 
     arch = "all"
 
-    archiveName = "${pkgName}.deb"
+    archiveFileName = "${pkgName}.deb"
 
     preDepends("debconf", "0.5", GREATER | EQUAL).or("debconf-2.0")
 
-    requires("openjdk-11-jre").or("java11-runtime").or("oracle-java11-installer").or("openjdk-11-jre-headless")
+    requires("openjdk-17-jre").or("java17-runtime").or("oracle-java17-installer").or("openjdk-17-jre-headless")
 
-    from("target/conf") {
+    from("${buildDir}/conf") {
         include "${pkgName}.conf"
         filter(ReplaceTokens, tokens: ['pkg.platform': 'deb'])
         fileType CONFIG | NOREPLACE
@@ -136,28 +132,16 @@ buildDeb {
     user pkgUser
     permissionGroup pkgUser
 
-    directory(pkgLogFolder, 0755)
-    link("/etc/init.d/${pkgName}", "${pkgInstallFolder}/bin/${pkgName}.jar")
+    // Copy the system unit files
+    from("${buildDir}/control/template.service") {
+        addParentDirs = false
+        fileMode 0644
+        into "/lib/systemd/system"
+        rename { String filename ->
+            "${pkgName}.service"
+        }
+    }
+
     link("${pkgInstallFolder}/bin/${pkgName}.yml", "${pkgInstallFolder}/conf/${pkgName}.yml")
     link("/etc/${pkgName}/conf", "${pkgInstallFolder}/conf")
-}
-
-task renameDeb(type: Copy) {
-    from("${buildDir}/") {
-        include '*.deb'
-        destinationDir file("${buildDir}/")
-        rename { String filename ->
-            "${pkgName}.deb"
-        }
-    }
-}
-
-task renameRpm(type: Copy) {
-    from("${buildDir}/") {
-        include '*.rpm'
-        destinationDir file("${buildDir}/")
-        rename { String filename ->
-            "${pkgName}.rpm"
-        }
-    }
 }

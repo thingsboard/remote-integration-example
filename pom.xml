@@ -1,6 +1,6 @@
 <!--
 
-    Copyright © 2016-2019 The Thingsboard Authors
+    Copyright © 2016-2025 The Thingsboard Authors
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 
     <groupId>org.thingsboard</groupId>
     <artifactId>remote-integration-example</artifactId>
-    <version>2.0.0</version>
+    <version>3.0.0</version>
     <packaging>jar</packaging>
 
     <name>Thingsboard Remote Integration Example</name>
@@ -30,19 +30,21 @@
     <inceptionYear>2016</inceptionYear>
 
     <properties>
-        <spring-boot.version>2.7.10</spring-boot.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <thingsboard.version>3.5.0PE</thingsboard.version>
-        <lombok.version>1.18.18</lombok.version>
-        <grpc.version>1.42.1</grpc.version>
-        <surefire.version>3.0.0-M9</surefire.version>
+        <thingsboard.version>4.0.1PE</thingsboard.version>
+        <spring-boot.version>3.2.12</spring-boot.version>
+        <lombok.version>1.18.32</lombok.version>
+        <grpc.version>1.63.0</grpc.version>
+        <winsw.version>2.0.1</winsw.version>
+        <surefire.version>3.2.5</surefire.version>
+        <dockerfile-maven.version>1.4.13</dockerfile-maven.version>
         <pkg.name>tb-remote-integration-example</pkg.name>
         <pkg.user>thingsboard</pkg.user>
         <pkg.installFolder>/usr/share/${pkg.name}</pkg.installFolder>
         <pkg.unixLogFolder>/var/log/${pkg.name}</pkg.unixLogFolder>
         <pkg.win.dist>${project.build.directory}/windows</pkg.win.dist>
-        <winsw.version>2.0.1</winsw.version>
         <tb-remote-integration-example.docker.name>tb-remote-integration-example</tb-remote-integration-example.docker.name>
         <dockerfile.skip>true</dockerfile.skip>
         <docker.repo>thingsboard</docker.repo>
@@ -102,7 +104,7 @@
                 <plugin>
                     <groupId>com.spotify</groupId>
                     <artifactId>dockerfile-maven-plugin</artifactId>
-                    <version>1.4.13</version>
+                    <version>${dockerfile-maven.version}</version>
                     <!--Latest version could not be used due to ClassNotFound error-->
                     <!--Should be investigated later-->
                     <!--<version>1.4.5</version>-->
@@ -110,13 +112,14 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <version>3.11.0</version>
                     <configuration>
-                        <release>11</release>
+                        <release>17</release>
                         <compilerArgs>
                             <arg>-Xlint:deprecation</arg>
                             <arg>-Xlint:removal</arg>
                             <arg>-Xlint:unchecked</arg>
+                            <arg>-parameters</arg>
                         </compilerArgs>
                         <annotationProcessorPaths>
                             <path>
@@ -155,7 +158,7 @@
                 <plugin>
                     <groupId>org.thingsboard</groupId>
                     <artifactId>gradle-maven-plugin</artifactId>
-                    <version>1.0.11</version>
+                    <version>1.0.12</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -163,7 +166,8 @@
                     <version>${surefire.version}</version>
                     <configuration>
                         <argLine>
-                            --illegal-access=permit
+                            -XX:+UseStringDeduplication -XX:MaxGCPauseMillis=20
+                            --add-opens java.base/java.lang.reflect=ALL-UNNAMED
                         </argLine>
                     </configuration>
                 </plugin>
@@ -459,17 +463,19 @@
                         <task>build</task>
                         <task>buildDeb</task>
                         <task>buildRpm</task>
-                        <task>renameDeb</task>
-                        <task>renameRpm</task>
                     </tasks>
                     <args>
                         <arg>-PprojectBuildDir=${project.build.directory}</arg>
                         <arg>-PprojectVersion=${project.version}</arg>
-                        <arg>-PmainJar=${project.build.directory}/${project.build.finalName}-boot.${project.packaging}</arg>
+                        <arg>
+                            -PmainJar=${project.build.directory}/${project.build.finalName}-boot.${project.packaging}
+                        </arg>
                         <arg>-PpkgName=${pkg.name}</arg>
                         <arg>-PpkgUser=${pkg.user}</arg>
                         <arg>-PpkgInstallFolder=${pkg.installFolder}</arg>
                         <arg>-PpkgLogFolder=${pkg.unixLogFolder}</arg>
+                        <arg>--warning-mode</arg>
+                        <arg>all</arg>
                     </args>
                 </configuration>
                 <executions>

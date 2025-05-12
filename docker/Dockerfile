@@ -1,5 +1,5 @@
 #
-# Copyright © 2016-2019 The Thingsboard Authors
+# Copyright © 2016-2025 The Thingsboard Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,16 +14,16 @@
 # limitations under the License.
 #
 
-FROM thingsboard/openjdk11
+FROM thingsboard/openjdk17:bookworm-slim
 
 COPY start-tb-remote-integration.sh ${pkg.name}.deb /tmp/
 
 RUN chmod a+x /tmp/*.sh \
-    && mv /tmp/start-tb-remote-integration.sh /usr/bin
-
-RUN dpkg -i /tmp/${pkg.name}.deb
-
-RUN systemctl --no-reload disable --now ${pkg.name}.service > /dev/null 2>&1 || :
+    && mv /tmp/start-tb-remote-integration.sh /usr/bin && \
+    (yes | dpkg -i /tmp/${pkg.name}.deb) && \
+    rm /tmp/${pkg.name}.deb && \
+    (systemctl --no-reload disable --now ${pkg.name}.service > /dev/null 2>&1 || :) && \
+    chmod 555 ${pkg.installFolder}/bin/${pkg.name}.jar
 
 USER ${pkg.user}
 
